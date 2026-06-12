@@ -1,18 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dream Portal</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+</head>
+
+<body>
+
+<!-- 🌌 Landing -->
 <div id="landing">
-  <h1>DREAM DIMENSION PORTAL</h1>
+  <h1>DREAM PORTAL</h1>
+  <p>Enter the Dream Dimension</p>
+  <button id="startBtn">ENTER</button>
+</div>
 
-  <p>進入未知夢境</p>
+<!-- 📖 HUD（操作說明，一定會顯示） -->
+<div id="hud">
+  <div class="box">
+    <h2>Controls</h2>
 
-  <div class="tips">
     <p>🖱 Move Mouse → Distort Portal</p>
-    <p>👆 Click → Open Rift</p>
+    <p>👆 Click → Energy Rift</p>
     <p>⌨ Space → Change Dimension</p>
-    <p>💾 S → Save Image</p>
-  </div>
+    <p>⌨ B → Black Hole Mode</p>
+    <p>⌨ S → Save Image</p>
 
-  <button id="startBtn">
-    Enter Dream
-  </button>
+    <p class="hint">Click here to hide</p>
+  </div>
 </div>
 
 <script src="script.js"></script>
