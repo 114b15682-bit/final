@@ -1,280 +1,250 @@
 let started = false;
 
 let particles = [];
-let rifts = [];
+let orbs = [];
 
 let theme = 0;
+let blackHole = false;
+let shake = 0;
 
-let themes = [
-  {
-    bg:[5,5,20],
-    glow:[0,255,255]
-  },
-  {
-    bg:[0,30,40],
-    glow:[0,180,255]
-  },
-  {
-    bg:[10,40,10],
-    glow:[0,255,100]
-  },
-  {
-    bg:[20,0,40],
-    glow:[255,0,255]
-  }
+let colors = [
+  [0,255,255],
+  [255,0,255],
+  [0,255,120],
+  [255,180,0]
 ];
 
-class Particle{
+let dreams = [
+  "Cyber Forest",
+  "Neon Ocean",
+  "Crystal Galaxy",
+  "Lost Dimension"
+];
 
-  constructor(){
-
-    this.x=random(width);
-    this.y=random(height);
-
-    this.size=random(1,4);
-
-    this.speed=random(0.2,1);
-  }
-
-  update(){
-
-    this.y-=this.speed;
-
-    if(this.y<0){
-      this.y=height;
-    }
-  }
-
-  display(){
-
-    fill(255,100);
-
-    noStroke();
-
-    circle(
-      this.x,
-      this.y,
-      this.size
-    );
-  }
-}
-
-class Rift{
-
-  constructor(x,y){
-
-    this.x=x;
-    this.y=y;
-
-    this.life=255;
-  }
-
-  update(){
-
-    this.life-=3;
-  }
-
-  display(){
-
-    push();
-
-    translate(this.x,this.y);
-
-    stroke(255,this.life);
-
-    noFill();
-
-    for(let i=0;i<5;i++){
-
-      let len=30+i*15;
-
-      line(
-        0,
-        0,
-        random(-len,len),
-        random(-len,len)
-      );
-    }
-
-    pop();
-  }
-}
+let currentDream = "";
 
 function setup(){
+  createCanvas(windowWidth, windowHeight);
 
-  let canvas=createCanvas(
-    windowWidth,
-    windowHeight
-  );
-
-  canvas.position(0,0);
-
-  noLoop();
-
-  for(let i=0;i<300;i++){
-
-    particles.push(
-      new Particle()
-    );
+  for(let i=0;i<400;i++){
+    particles.push({
+      x:random(width),
+      y:random(height),
+      s:random(1,3),
+      sp:random(0.5,2)
+    });
   }
 
-  document
-    .getElementById("startBtn")
-    .addEventListener("click",()=>{
+  currentDream = random(dreams);
 
-      document
-      .getElementById("landing")
-      .style.display="none";
+  // 📖 HUD 點擊關閉（只會關一次，不會誤消失）
+  let hud = document.getElementById("hud");
 
-      started=true;
+  hud.addEventListener("click", () => {
+    hud.style.opacity = 0;
 
-      loop();
-    });
+    setTimeout(() => {
+      hud.style.display = "none";
+    }, 600);
+  });
 }
 
 function draw(){
 
-  if(!started) return;
+  if(!started){
+    background(0);
+    return;
+  }
 
-  let t=themes[theme];
+  let c = colors[theme];
 
-  background(
-    t.bg[0],
-    t.bg[1],
-    t.bg[2],
-    50
-  );
+  background(5,10,20,25);
+
+  shake *= 0.9;
+
+  translate(random(-shake,shake), random(-shake,shake));
+
+  drawParticles();
+  drawOrbs();
+  drawPortal(c);
+  drawUI();
+}
+
+/* 🌌 粒子 */
+function drawParticles(){
 
   for(let p of particles){
 
-    p.update();
-    p.display();
-  }
+    noStroke();
+    fill(255,120);
+    circle(p.x,p.y,p.s);
 
-  drawPortal();
+    // 黑洞（不會破壞畫面版本）
+    if(blackHole){
 
-  for(let i=rifts.length-1;i>=0;i--){
+      let dx = width/2 - p.x;
+      let dy = height/2 - p.y;
 
-    rifts[i].update();
-    rifts[i].display();
+      let dist = sqrt(dx*dx + dy*dy);
 
-    if(rifts[i].life<0){
+      let force = map(dist,0,width,0.08,0);
 
-      rifts.splice(i,1);
+      p.x += dx * force;
+      p.y += dy * force;
+    }
+
+    p.y -= p.sp;
+
+    if(p.y < 0){
+      p.y = height;
+      p.x = random(width);
     }
   }
 }
 
-function drawPortal(){
+/* 💫 能量球 */
+function drawOrbs(){
+
+  for(let i=orbs.length-1;i>=0;i--){
+
+    noStroke();
+    fill(0,255,255,orbs[i].life);
+
+    circle(orbs[i].x,orbs[i].y,20);
+
+    orbs[i].life -= 5;
+
+    if(orbs[i].life < 0){
+      orbs.splice(i,1);
+    }
+  }
+}
+
+/* 🌀 傳送門 */
+function drawPortal(c){
 
   push();
+  translate(width/2, height/2);
 
-  translate(
-    width/2,
-    height/2
-  );
+  let t = frameCount * 0.01;
 
-  let t=themes[theme];
-
-  drawingContext.shadowBlur=40;
-
-  drawingContext.shadowColor=
-  `rgb(
-  ${t.glow[0]},
-  ${t.glow[1]},
-  ${t.glow[2]}
-  )`;
-
-  stroke(
-    t.glow[0],
-    t.glow[1],
-    t.glow[2]
-  );
-
-  strokeWeight(3);
+  drawingContext.shadowBlur = 60;
+  drawingContext.shadowColor =
+    `rgb(${c[0]},${c[1]},${c[2]})`;
 
   noFill();
+  strokeWeight(2);
+
+  // 多層能量圈
+  for(let i=0;i<5;i++){
+
+    stroke(c[0],c[1],c[2],80-i*12);
+
+    beginShape();
+
+    for(let a=0;a<TWO_PI;a+=0.05){
+
+      let n = noise(
+        cos(a)*2 + t,
+        sin(a)*2 + t
+      );
+
+      let r = 160 + i*25 + n*90;
+
+      let x = cos(a + t*0.5) * r;
+      let y = sin(a + t*0.5) * r;
+
+      vertex(x,y);
+    }
+
+    endShape(CLOSE);
+  }
+
+  // 核心漩渦
+  stroke(c[0],c[1],c[2]);
+  strokeWeight(3);
 
   beginShape();
 
-  let offset=
-  map(
-    mouseX,
-    0,
-    width,
-    0,
-    2
-  );
+  for(let a=0;a<TWO_PI;a+=0.04){
 
-  for(
-    let a=0;
-    a<TWO_PI;
-    a+=0.05
-  ){
-
-    let n=noise(
-      cos(a)+frameCount*0.01,
-      sin(a)+frameCount*0.01
+    let n = noise(
+      cos(a)+t*2,
+      sin(a)+t*2
     );
 
-    let r=
-    180+
-    n*70+
-    offset*20;
+    let r = 90 + n*140;
 
-    let x=
-    cos(a)*r;
-
-    let y=
-    sin(a)*r;
+    let x = cos(a + t*2) * r;
+    let y = sin(a + t*2) * r;
 
     vertex(x,y);
   }
 
   endShape(CLOSE);
 
-  rotate(frameCount*0.005);
+  // 核心光球
+  noStroke();
+  fill(c[0],c[1],c[2],150);
 
-  ellipse(0,0,450);
-  ellipse(0,0,520);
+  circle(0,0,30 + sin(frameCount*0.1)*10);
 
   pop();
 }
 
+/* 📜 UI */
+function drawUI(){
+
+  fill(255);
+  textAlign(CENTER);
+
+  textSize(20);
+  text(currentDream, width/2, 60);
+
+  textSize(14);
+  text("Space: Theme | B: Black Hole | Click: Rift", width/2, height-40);
+}
+
+/* 👆 點擊 */
 function mousePressed(){
 
   if(!started) return;
 
-  rifts.push(
-    new Rift(
-      mouseX,
-      mouseY
-    )
-  );
+  orbs.push({
+    x:mouseX,
+    y:mouseY,
+    life:255
+  });
+
+  shake = 15;
 }
 
+/* ⌨ 控制 */
 function keyPressed(){
 
-  if(key==" "){
-
-    theme++;
-
-    theme%=themes.length;
+  if(key === " "){
+    theme = (theme + 1) % colors.length;
+    currentDream = random(dreams);
   }
 
-  if(key=="s"||key=="S"){
+  if(key === "b"){
+    blackHole = !blackHole;
+  }
 
-    saveCanvas(
-      "dream_dimension",
-      "png"
-    );
+  if(key === "s"){
+    saveCanvas("dream_portal","png");
   }
 }
 
-function windowResized(){
+/* 🚀 開始 */
+window.onload = () => {
 
-  resizeCanvas(
-    windowWidth,
-    windowHeight
-  );
+  document.getElementById("startBtn").onclick = () => {
+    document.getElementById("landing").style.display = "none";
+    started = true;
+  };
+};
+
+function windowResized(){
+  resizeCanvas(windowWidth, windowHeight);
 }
